@@ -43,10 +43,12 @@ class CffdBot(object):
     def _write(self, channel, text):
         asyncio.ensure_future(self._client.send_message(channel, text))
 
+    @asyncio.coroutine
     def _write_now(self, channel, text):
         yield from self._client.send_message(channel, text)
 
-    def _write_error(self, text):
+    @asyncio.coroutine
+    def write_error(self, text):
         print('Error: {}'.format(text))
         asyncio.ensure_future(self._client.send_message(self._main_channel, 'Error: {}'.format(text)))
 
@@ -124,28 +126,24 @@ class CffdBot(object):
         args = message.content.split()
         command = args.pop(0).replace(config.BOT_COMMAND_PREFIX, '', 1)
 
-        try:
-            #.help : Quick help reference
-            if command == 'help':
-                bot_cmd_str = 'In this channel only:\n'
-                yield from self._write_now(message.channel, bot_cmd_str + HELP_BOTCOMMANDS)
-                race_chnl_str = 'In race channels only:\n'
-                yield from self._write_now(message.channel, race_chnl_str + HELP_RACE_CHANNELS)
+        #.help : Quick help reference
+        if command == 'help':
+            bot_cmd_str = 'In this channel only:\n'
+            yield from self._write_now(message.channel, bot_cmd_str + HELP_BOTCOMMANDS)
+            race_chnl_str = 'In race channels only:\n'
+            yield from self._write_now(message.channel, race_chnl_str + HELP_RACE_CHANNELS)
 
-            #.make : Create race room
-            elif command == 'make':
-                yield from self.make_room()
-                
-            #.randomseed : Generate a new random seed
-            elif command == 'randomseed':
-                seed = seedgen.get_new_seed()
-                yield from self._write(message.channel, 'Seed generated: {1}'.format(message.author.mention, seed))       
+        #.make : Create race room
+        elif command == 'make':
+            yield from self.make_room()
+            
+        #.randomseed : Generate a new random seed
+        elif command == 'randomseed':
+            seed = seedgen.get_new_seed()
+            yield from self._write(message.channel, 'Seed generated: {1}'.format(message.author.mention, seed))       
 
-            elif command == 'info':
-                yield from self._write(message.channel, CffdBot.infostr())
-        except discord.DiscordException as e:
-            asyncio.ensure_future(self._client.send_message(self._main_channel, 'Sorry, but while handling `{0}{1}` I encountered a Discord error: {2})'.format(config.BOT_COMMAND_PREFIX, command, e)))
-            raise
+        elif command == 'info':
+            yield from self._write(message.channel, CffdBot.infostr())
 
     @asyncio.coroutine
     def race_channel_command(self, room_channel, message):
@@ -251,14 +249,11 @@ class CffdBot(object):
         return non_admins
 
     def get_race_channel_name(self, voice_channel):
-        channel_name = ''
+        channel_name = 'race_'
         for user in self.get_non_admins(voice_channel):
             channel_name += user.name + '-'
 
-        if channel_name.endswith('-'):
-            return channel_name[:-1]
-        else:
-            return 'empty_race'
+        return (channel_name[:-1])[:64]
 
     #Allow only the admin-role members and the users in the voice channel to read the room channel
     @asyncio.coroutine

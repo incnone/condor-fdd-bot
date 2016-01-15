@@ -47,3 +47,7 @@ Temporary Items
 .apdisk
 *.pyc
 data/login_info
+discord.log
+data/login_info_testsite
+data/login_info_condor
+discord.log

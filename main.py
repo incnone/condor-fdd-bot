@@ -7,6 +7,8 @@ import discord
 import logging
 import textwrap
 import time
+import traceback
+import sys
 
 import config
 import seedgen
@@ -63,5 +65,7 @@ def on_ready():
 def on_message(message):
     yield from cffdbot.parse_message(message)
 
-# Run client (TODO: use login(), start(), whatever to not get a blocking method)
+#TODO : handle errors
+
+# Run client
 client.run(login_data.email, login_data.password)
